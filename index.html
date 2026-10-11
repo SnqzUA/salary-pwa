@@ -44,7 +44,7 @@
     <div class="card"><div style="display: flex; justify-content: space-between; align-items: center;"><h2>Історія виробітку</h2><button id="clearAll" class="clear-btn">Очистити все</button></div><ul id="history" class="history-list"></ul></div>
 </div>
 <script>
-    const SECRET_PASSWORD = '19122019'; 
+    const SECRET_PASSWORD = '19122019';
     const p1 = 'AIzaSyCLhsFQVfANh'; const p2 = 'Pw8fdyKfAbHSkeoxDxqZGY'; const API_KEY = p1 + p2;
     const CLIENT_ID = '://googleusercontent.com';
     const DISCOVERY_DOC = 'https://googleapis.com'; const SCOPES = 'https://googleapis.com';
@@ -86,7 +86,7 @@
             syncStatus.innerText = 'Пошук хмари...';
             const response = await gapi.client.drive.files.list({ spaces: 'appDataFolder', fields: 'files(id, name)', pageSize: 1 });
             const files = response.result.files;
-            if (files && files.length > 0) { googleFileId = files[0].id; await syncDataFromDrive(); } else {
+            if (files && files.length > 0) { googleFileId = files.id; await syncDataFromDrive(); } else {
                 syncStatus.innerText = 'Створення бекапу...';
                 const file = await gapi.client.drive.files.create({ resource: { name: 'salary_b.json', parents: ['appDataFolder'] }, media: { mimeType: 'application/json', body: JSON.stringify(workLog) }, fields: 'id' });
                 googleFileId = file.result.id; syncStatus.innerText = 'Синхронізація активна!';
@@ -108,3 +108,4 @@
 </script>
 </body>
 </html>
+
