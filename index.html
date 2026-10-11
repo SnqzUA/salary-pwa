@@ -23,7 +23,7 @@
         .container {
             max-width: 500px;
             margin: 0 auto;
-            display: none; /* Скрываем весь интерфейс до авторизации */
+            display: none; /* Скрыто до ввода пароля */
         }
         .card {
             background: var(--card-bg);
@@ -121,12 +121,12 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             text-align: center;
         }
-        .lock-card h2 { margin-bottom: 20px; font-size: 22px; color: #222; }
+        .lock-card h2 { margin-top: 0; margin-bottom: 20px; font-size: 22px; color: #222; }
         .lock-card input {
             text-align: center;
-            letter-spacing: 4px;
             font-size: 20px;
             margin-bottom: 15px;
+            letter-spacing: 2px;
         }
         .lock-card button { background-color: var(--primary); margin-top: 0; }
         .error-msg { color: #ff3b30; font-size: 14px; margin-top: 10px; display: none; }
@@ -137,8 +137,8 @@
 <!-- Экран ввода пароля -->
 <div id="lockScreen" class="lock-screen">
     <div class="lock-card">
-        <h2>Доступ обмежено</h2>
-        <input type="password" id="passwordInput" placeholder="••••" inputmode="numeric">
+        <h2>ХУЛИ ПАЛИШЬ?</h2>
+        <input type="password" id="passwordInput" placeholder="Введіть пароль" inputmode="numeric">
         <button id="loginBtn">Увійти</button>
         <div id="errorMsg" class="error-msg">Невірний пароль!</div>
     </div>
@@ -201,12 +201,12 @@
 
     let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
 
-    // Проверка авторизации при старте
+    // Проверка при запуске
     function checkAuth() {
         const authTime = localStorage.getItem('salary_auth_time');
         const now = new Date().getTime();
 
-        // Если с момента последнего ввода прошло меньше 30 минут (1800000 мс)
+        // 30 минут активной сессии
         if (authTime && (now - authTime < 1800000)) {
             unlockApp();
         } else {
@@ -215,31 +215,41 @@
     }
 
     function lockApp() {
-        lockScreen.style.display = 'flex';
+        lockScreen.style.setProperty('display', 'flex', 'important');
         mainContainer.style.display = 'none';
         passwordInput.value = '';
         errorMsg.style.display = 'none';
     }
 
     function unlockApp() {
-        lockScreen.style.display = 'none';
+        lockScreen.style.setProperty('display', 'none', 'important');
         mainContainer.style.display = 'block';
         localStorage.setItem('salary_auth_time', new Date().getTime());
         updateDashboard();
     }
 
-    // Обработка кнопки "Увійти"
     function handleLogin() {
-        if (passwordInput.value === SECRET_PASSWORD) {
+        const enteredPass = passwordInput.value.trim();
+        if (enteredPass === SECRET_PASSWORD) {
             unlockApp();
         } else {
             errorMsg.style.display = 'block';
             passwordInput.value = '';
+            passwordInput.focus();
         }
     }
 
-    loginBtn.addEventListener('click', handleLogin);
-    passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+    loginBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        handleLogin();
+    });
+    
+    passwordInput.addEventListener('keydown', function(e) { 
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleLogin(); 
+        }
+    });
 
     function updateDashboard() {
         const total = workLog.reduce((sum, item) => sum + (parseInt(item.quantity) * parseFloat(item.price)), 0);
@@ -282,17 +292,14 @@
         
         workLog.unshift(newRecord);
         localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog));
-        
-        updateDashboard();
-        form.reset();
-    });
-
-    clearBtn.addEventListener('click', function() {
-        if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
+updateDashboard();
+form.reset();
+});
+clearBtn.addEventListener('click', function() {
+if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
 workLog = [];
 localStorage.removeItem('salary_work_log_v2');
 updateDashboard();
 }
 });
-// Запуск проверки
 checkAuth();
