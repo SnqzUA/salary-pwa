@@ -46,18 +46,49 @@
 <script>
     const SECRET_PASSWORD = '19122019';
     const p1 = 'AIzaSyCLhsFQVfANh'; const p2 = 'Pw8fdyKfAbHSkeoxDxqZGY'; const API_KEY = p1 + p2;
-    const CLIENT_ID = '://googleusercontent.com';
+    const CLIENT_ID = '1010318885503-h9bfteq7po2of5se379ok2lmium79reg.apps.googleusercontent.com';
     const DISCOVERY_DOC = 'https://googleapis.com'; const SCOPES = 'https://googleapis.com';
+
     let gapiInited = false, gisInited = false, tokenClient, googleFileId = null;
-    const form = document.getElementById('salaryForm'), historyContainer = document.getElementById('history'), totalSalaryContainer = document.getElementById('totalSalary'), clearBtn = document.getElementById('clearAll');
-    const lockScreen = document.getElementById('lockScreen'), mainContainer = document.getElementById('mainContainer'), passwordInput = document.getElementById('passwordInput'), loginBtn = document.getElementById('loginBtn'), syncBtn = document.getElementById('syncBtn'), syncStatus = document.getElementById('syncStatus');
+
+    const form = document.getElementById('salaryForm');
+    const historyContainer = document.getElementById('history');
+    const totalSalaryContainer = document.getElementById('totalSalary');
+    const clearBtn = document.getElementById('clearAll');
+    const lockScreen = document.getElementById('lockScreen');
+    const mainContainer = document.getElementById('mainContainer');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const syncBtn = document.getElementById('syncBtn');
+    const syncStatus = document.getElementById('syncStatus');
+
     let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
-    function checkAuth() { const authTime = localStorage.getItem('salary_auth_time'); if (authTime && (new Date().getTime() - authTime < 1800000)) { unlockApp(); } else { lockApp(); } }
-    function lockApp() { lockScreen.style.display = 'flex'; mainContainer.style.display = 'none'; passwordInput.value = ''; document.getElementById('errorMsg').style.display = 'none'; }
-    function unlockApp() { lockScreen.style.display = 'none'; mainContainer.style.display = 'block'; localStorage.setItem('salary_auth_time', new Date().getTime()); updateDashboard(); maybeShowSyncBtn(); }
-    function handleLogin() { if (passwordInput.value.trim() === SECRET_PASSWORD) { unlockApp(); } else { document.getElementById('errorMsg').style.display = 'block'; passwordInput.value = ''; passwordInput.focus(); } }
+
+    function checkAuth() {
+        const authTime = localStorage.getItem('salary_auth_time');
+        if (authTime && (new Date().getTime() - authTime < 1800000)) { unlockApp(); } else { lockApp(); }
+    }
+
+    function lockApp() {
+        lockScreen.style.display = 'flex'; mainContainer.style.display = 'none';
+        passwordInput.value = ''; document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    function unlockApp() {
+        lockScreen.style.display = 'none'; mainContainer.style.display = 'block';
+        localStorage.setItem('salary_auth_time', new Date().getTime());
+        updateDashboard(); maybeShowSyncBtn();
+    }
+
+    function handleLogin() {
+        if (passwordInput.value.trim() === SECRET_PASSWORD) { unlockApp(); } else {
+            document.getElementById('errorMsg').style.display = 'block'; passwordInput.value = ''; passwordInput.focus();
+        }
+    }
+
     loginBtn.addEventListener('click', function(e) { e.preventDefault(); handleLogin(); });
     passwordInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); handleLogin(); } });
+
     function updateDashboard() {
         const total = workLog.reduce((sum, item) => sum + (parseInt(item.quantity) * parseFloat(item.price)), 0);
         totalSalaryContainer.innerText = `${total.toFixed(2)} грн`; historyContainer.innerHTML = '';
@@ -68,19 +99,31 @@
             historyContainer.appendChild(li);
         });
     }
+
     form.addEventListener('submit', function(e) {
         e.preventDefault(); const now = new Date(); const dateStr = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
         workLog.unshift({ jobName: document.getElementById('jobName').value, quantity: document.getElementById('quantity').value, price: document.getElementById('price').value, date: dateStr });
-        localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard(); form.reset(); if (googleFileId) saveToGoogleDrive();
+        localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard(); form.reset();
+        if (googleFileId) saveToGoogleDrive();
     });
-    clearBtn.addEventListener('click', function() { if (confirm('Ви впевнені?')) { workLog = []; localStorage.removeItem('salary_work_log_v2'); updateDashboard(); if (googleFileId) saveToGoogleDrive(); } });
-    function gapiLoaded() { gapi.load('client', () => gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] }).then(() => { gapiInited = true; maybeShowSyncBtn(); })); }
+
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Ви впевнені?')) {
+            workLog = []; localStorage.removeItem('salary_work_log_v2'); updateDashboard();
+            if (googleFileId) saveToGoogleDrive();
+        }
+    });
+
+    function gapiLoaded() { gapi.load('client', () => { gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] }).then(() => { gapiInited = true; maybeShowSyncBtn(); }); }); }
     function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; maybeShowSyncBtn(); }
+    
     function maybeShowSyncBtn() { if (gapiInited && gisInited && mainContainer.style.display === 'block') { syncBtn.style.display = 'inline-flex'; if (gapi.client.getToken()) { loadOrInitializeDriveFile(); } } }
+
     syncBtn.addEventListener('click', () => {
         tokenClient.callback = async (resp) => { if (resp.error !== undefined) throw (resp); syncStatus.innerText = 'Підключення...'; await loadOrInitializeDriveFile(); };
         if (gapi.client.getToken() === null) { tokenClient.requestAccessToken({prompt: 'consent'}); } else { tokenClient.requestAccessToken({prompt: ''}); }
     });
+
     async function loadOrInitializeDriveFile() {
         try {
             syncStatus.innerText = 'Пошук хмари...';
@@ -93,6 +136,7 @@
             }
         } catch (err) { console.error(err); syncStatus.innerText = 'Помилка хмари.'; }
     }
+
     async function syncDataFromDrive() {
         try {
             const response = await gapi.client.drive.files.get({ fileId: googleFileId, alt: 'media' });
@@ -100,10 +144,13 @@
             const localMap = new Map(workLog.map(item => [item.date + item.jobName, item]));
             cloudLog.forEach(item => { if (!localMap.has(item.date + item.jobName)) workLog.push(item); });
             workLog.sort((a, b) => b.date.localeCompare(a.date));
-            localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard(); await saveToGoogleDrive(); syncStatus.innerText = 'Дані об’єднано!';
+            localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard();
+            await saveToGoogleDrive(); syncStatus.innerText = 'Дані об’єднано!';
         } catch (err) { console.error(err); syncStatus.innerText = 'Помилка синхронізації.'; }
     }
+
     async function saveToGoogleDrive() { if (!googleFileId) return; try { await gapi.client.drive.files.update({ fileId: googleFileId, media: { mimeType: 'application/json', body: JSON.stringify(workLog) } }); } catch (err) { console.error(err); } }
+    
     checkAuth();
 </script>
 </body>
