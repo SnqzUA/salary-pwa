@@ -185,7 +185,7 @@
 </div>
 
 <script>
-    // Твой новый пароль сохранен здесь
+    // Твой личный пароль прописан здесь
     const SECRET_PASSWORD = '19122019'; 
 
     const form = document.getElementById('salaryForm');
@@ -201,11 +201,12 @@
 
     let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
 
+    // Проверка при запуске
     function checkAuth() {
         const authTime = localStorage.getItem('salary_auth_time');
         const now = new Date().getTime();
 
-        // 30 минут сессии
+        // 30 минут активной сессии
         if (authTime && (now - authTime < 1800000)) {
             unlockApp();
         } else {
@@ -293,4 +294,4 @@
         form.reset();
     });
 
-    clearBtn.addEventListener('click', function() {
+Ы
