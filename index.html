@@ -293,5 +293,11 @@
         updateDashboard();
         form.reset();
     });
-
-Ы
+clearBtn.addEventListener('click', function() {
+if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
+workLog = [];
+localStorage.removeItem('salary_work_log_v2');
+updateDashboard();
+}
+});
+checkAuth();
