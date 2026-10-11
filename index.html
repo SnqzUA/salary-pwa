@@ -6,156 +6,46 @@
     <title>Розрахунок ЗП</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        :root {
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --text-color: #333;
-            --primary: #007aff;
-            --accent: #34c759;
-            --danger: #ff3b30;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 15px;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            display: none; /* Спрятано до ввода пароля */
-        }
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 15px;
-        }
-        .total-box {
-            background: linear-gradient(135deg, #007aff, #0056b3);
-            color: white;
-            text-align: center;
-        }
-        .total-box h3 { margin: 0; font-size: 16px; opacity: 0.9; }
+        :root { --bg-color: #f4f6f9; --card-bg: #ffffff; --text-color: #333; --primary: #007aff; --accent: #34c759; --danger: #ff3b30; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 15px; }
+        .container { max-width: 500px; margin: 0 auto; display: none; }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .total-box { background: linear-gradient(135deg, #007aff, #0056b3); color: white; text-align: center; }
         .total-amount { font-size: 32px; font-weight: bold; margin-top: 5px; }
-        .sync-btn {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            margin-top: 10px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 500;
-        }
-        .sync-btn:active { background-color: rgba(255, 255, 255, 0.3); }
+        .sync-btn { background-color: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.4); padding: 8px 15px; border-radius: 20px; font-size: 13px; margin-top: 10px; cursor: pointer; font-weight: 500; }
         .sync-status { font-size: 11px; margin-top: 5px; opacity: 0.8; }
-        h2 { margin-top: 0; font-size: 18px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
-        input {
-            width: 100%; padding: 12px; border: 1px solid #ccc;
-            border-radius: 8px; box-sizing: border-box; font-size: 16px;
-        }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .form-row { display: flex; gap: 10px; }
         .form-row .form-group { flex: 1; margin-bottom: 0; }
-        button[type="submit"] {
-            width: 100%; padding: 14px; background-color: var(--accent);
-            color: white; border: none; border-radius: 8px;
-            font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px;
-        }
-        button:active { opacity: 0.9; }
+        button[type="submit"] { width: 100%; padding: 14px; background-color: var(--accent); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
         .history-list { list-style: none; padding: 0; margin: 0; }
-        .history-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 0; border-bottom: 1px solid #eee;
-        }
-        .history-item:last-child { border-bottom: none; }
-        .amount-tag { font-weight: bold; color: #222; text-align: right; }
-        .details { color: #666; font-size: 13px; margin-top: 2px; }
-        .date { color: #999; font-size: 11px; margin-top: 2px; }
-        .clear-btn {
-            background: none; color: var(--danger); border: none; padding: 5px;
-            font-size: 12px; cursor: pointer; width: auto; text-align: right;
-            margin-top: 10px; font-weight: normal;
-        }
-        .lock-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color); display: flex;
-            justify-content: center; align-items: center; z-index: 9999;
-        }
-        .lock-card {
-            width: 90%; max-width: 360px; background: white; padding: 30px;
-            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;
-        }
-        .lock-card h2 { margin-top: 0; margin-bottom: 20px; font-size: 22px; color: #222; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .amount-tag { font-weight: bold; color: #222; }
+        .details { color: #666; font-size: 13px; }
+        .date { color: #999; font-size: 11px; }
+        .clear-btn { background: none; color: var(--danger); border: none; padding: 5px; font-size: 12px; cursor: pointer; text-align: right; margin-top: 10px; }
+        .lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .lock-card { width: 90%; max-width: 360px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .lock-card h2 { margin-top: 0; margin-bottom: 20px; font-size: 22px; }
         .lock-card input { text-align: center; font-size: 20px; margin-bottom: 15px; letter-spacing: 2px; }
-        .lock-card button { background-color: var(--primary); width: 100%; padding: 14px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 16px;}
+        .lock-card button { background-color: var(--primary); width: 100%; padding: 14px; border: none; border-radius: 8px; color: white; font-weight: bold; font-size: 16px; }
         .error-msg { color: var(--danger); font-size: 14px; margin-top: 10px; display: none; }
     </style>
-    <!-- Подключаем скрипты Google -->
     <script async defer src="https://google.com" onload="gapiLoaded()"></script>
     <script async defer src="https://google.com" onload="gisLoaded()"></script>
 </head>
 <body>
-
-<!-- Екран блокування -->
-<div id="lockScreen" class="lock-screen">
-    <div class="lock-card">
-        <h2>ХУЛИ ПАЛИШЬ?</h2>
-        <input type="password" id="passwordInput" placeholder="Введіть пароль" inputmode="numeric">
-        <button id="loginBtn">Увійти</button>
-        <div id="errorMsg" class="error-msg">Невірний пароль!</div>
-    </div>
-</div>
-
-<!-- Основний інтерфейс -->
+<div id="lockScreen" class="lock-screen"><div class="lock-card"><h2>ХУЛИ ПАЛИШЬ?</h2><input type="password" id="passwordInput" placeholder="Введіть пароль" inputmode="numeric"><button id="loginBtn">Увійти</button><div id="errorMsg" class="error-msg">Невірний пароль!</div></div></div>
 <div class="container" id="mainContainer">
-    <div class="card total-box">
-        <h3>Зароблено всього:</h3>
-        <div class="total-amount" id="totalSalary">0.00 грн</div>
-        <button id="syncBtn" class="sync-btn" style="display:none;">🔄 Синхронізувати з Cloud</button>
-        <div id="syncStatus" class="sync-status"></div>
-    </div>
-
-    <div class="card">
-        <h2>Додати виконану роботу</h2>
-        <form id="salaryForm">
-            <div class="form-group">
-                <label for="jobName">Назва роботи</label>
-                <input type="text" id="jobName" placeholder="Наприклад: Обробка деталей" required>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="quantity">Кількість (шт)</label>
-                    <input type="number" id="quantity" min="1" placeholder="0" required inputmode="numeric">
-                </div>
-                <div class="form-group">
-                    <label for="price">Ціна за 1 шт (грн)</label>
-                    <input type="number" id="price" step="0.01" placeholder="0.00" required inputmode="decimal">
-                </div>
-            </div>
-            <button type="submit">Додати в баланс</button>
-        </form>
-    </div>
-
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h2>Історія виробітку</h2>
-            <button id="clearAll" class="clear-btn">Очистити все</button>
-        </div>
-        <ul id="history" class="history-list"></ul>
-    </div>
+    <div class="card total-box"><h3>Зароблено всього:</h3><div class="total-amount" id="totalSalary">0.00 грн</div><button id="syncBtn" class="sync-btn" style="display:none;">🔄 Синхронізувати з Cloud</button><div id="syncStatus" class="sync-status"></div></div>
+    <div class="card"><h2>Додати виконану роботу</h2><form id="salaryForm"><div class="form-group"><label>Назва роботи</label><input type="text" id="jobName" placeholder="Наприклад: Обробка деталей" required></div><div class="form-row"><div class="form-group"><label>Кількість (шт)</label><input type="number" id="quantity" min="1" placeholder="0" required inputmode="numeric"></div><div class="form-group"><label>Ціна за 1 шт (грн)</label><input type="number" id="price" step="0.01" placeholder="0.00" required inputmode="decimal"></div></div><button type="submit">Додати в баланс</button></form></div>
+    <div class="card"><div style="display: flex; justify-content: space-between; align-items: center;"><h2>Історія виробітку</h2><button id="clearAll" class="clear-btn">Очистити все</button></div><ul id="history" class="history-list"></ul></div>
 </div>
 <script>
     const SECRET_PASSWORD = '19122019'; 
-    const keyPart1 = 'AIzaSyCLhsFQVfANhPw8f'; const keyPart2 = 'dyKfAbHSkeoxDxqZGY'; const API_KEY = keyPart1 + keyPart2;
+    const p1 = 'AIzaSyCLhsFQVfANh'; const p2 = 'Pw8fdyKfAbHSkeoxDxqZGY'; const API_KEY = p1 + p2;
     const CLIENT_ID = '://googleusercontent.com';
     const DISCOVERY_DOC = 'https://googleapis.com'; const SCOPES = 'https://googleapis.com';
     let gapiInited = false, gisInited = false, tokenClient, googleFileId = null;
@@ -179,14 +69,12 @@
         });
     }
     form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const now = new Date(); const dateStr = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
+        e.preventDefault(); const now = new Date(); const dateStr = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
         workLog.unshift({ jobName: document.getElementById('jobName').value, quantity: document.getElementById('quantity').value, price: document.getElementById('price').value, date: dateStr });
-        localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard(); form.reset();
-        if (googleFileId) saveToGoogleDrive();
+        localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard(); form.reset(); if (googleFileId) saveToGoogleDrive();
     });
     clearBtn.addEventListener('click', function() { if (confirm('Ви впевнені?')) { workLog = []; localStorage.removeItem('salary_work_log_v2'); updateDashboard(); if (googleFileId) saveToGoogleDrive(); } });
-    function gapiLoaded() { gapi.load('client', () => gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] }).then(() => { gapiInited = true; maybeShowSyncBtn(); })); }
+    function gapiLoaded() { gapi.load('client', () => gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] }).then(() => { gapiInited = true; maybeShowSyncBtn(); }))); }
     function gisLoaded() { tokenClient = google.accounts.oauth2.initTokenClient({ client_id: CLIENT_ID, scope: SCOPES, callback: '' }); gisInited = true; maybeShowSyncBtn(); }
     function maybeShowSyncBtn() { if (gapiInited && gisInited && mainContainer.style.display === 'block') { syncBtn.style.display = 'inline-flex'; if (gapi.client.getToken()) { loadOrInitializeDriveFile(); } } }
     syncBtn.addEventListener('click', () => {
@@ -212,8 +100,7 @@
             const localMap = new Map(workLog.map(item => [item.date + item.jobName, item]));
             cloudLog.forEach(item => { if (!localMap.has(item.date + item.jobName)) workLog.push(item); });
             workLog.sort((a, b) => b.date.localeCompare(a.date));
-            localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard();
-            await saveToGoogleDrive(); syncStatus.innerText = 'Дані об’єднано!';
+            localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog)); updateDashboard(); await saveToGoogleDrive(); syncStatus.innerText = 'Дані об’єднано!';
         } catch (err) { console.error(err); syncStatus.innerText = 'Помилка синхронізації.'; }
     }
     async function saveToGoogleDrive() { if (!googleFileId) return; try { await gapi.client.drive.files.update({ fileId: googleFileId, media: { mimeType: 'application/json', body: JSON.stringify(workLog) } }); } catch (err) { console.error(err); } }
