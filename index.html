@@ -53,7 +53,7 @@
             border: 1px solid #ccc;
             border-radius: 8px;
             box-sizing: border-box;
-            font-size: 16px; /* Защита от автозума */
+            font-size: 16px;
         }
         .form-row {
             display: flex;
@@ -105,30 +105,25 @@
 <body>
 
 <div class="container">
-    <!-- Общий баланс заработка -->
     <div class="card total-box">
         <h3>Зароблено всього:</h3>
         <div class="total-amount" id="totalSalary">0.00 грн</div>
     </div>
 
-    <!-- Форма выработки -->
     <div class="card">
         <h2>Додати виконану роботу</h2>
         <form id="salaryForm">
-            <!-- 1 поле: Название работы -->
             <div class="form-group">
                 <label for="jobName">Назва роботи</label>
                 <input type="text" id="jobName" placeholder="Наприклад: Обробка деталей, Упаковка" required>
             </div>
 
             <div class="form-row">
-                <!-- 2 поле: Количество штук -->
                 <div class="form-group">
                     <label for="quantity">Кількість (шт)</label>
                     <input type="number" id="quantity" min="1" placeholder="0" required inputmode="numeric">
                 </div>
 
-                <!-- 3 field: Цена за 1 шт -->
                 <div class="form-group">
                     <label for="price">Ціна за 1 шт (грн)</label>
                     <input type="number" id="price" step="0.01" placeholder="0.00" required inputmode="decimal">
@@ -139,7 +134,6 @@
         </form>
     </div>
 
-    <!-- Список выработки -->
     <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h2>Історія виробітку</h2>
@@ -150,6 +144,10 @@
 </div>
 
 <script>
+    // === ТВОЙ ПАРОЛЬ ТУТ ===
+    // Замени '1234' на любой свой секретный пароль (оставь в кавычках)
+    const SECRET_PASSWORD = '19122019'; 
+
     const form = document.getElementById('salaryForm');
     const historyContainer = document.getElementById('history');
     const totalSalaryContainer = document.getElementById('totalSalary');
@@ -158,11 +156,9 @@
     let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
 
     function updateDashboard() {
-        // Считаем общую сумму ЗП (количество * цену каждой записи)
         const total = workLog.reduce((sum, item) => sum + (parseInt(item.quantity) * parseFloat(item.price)), 0);
         totalSalaryContainer.innerText = `${total.toFixed(2)} грн`;
 
-        // Рендерим историю
         historyContainer.innerHTML = '';
         if (workLog.length === 0) {
             historyContainer.innerHTML = '<li style="color:#888; text-align:center; padding: 10px 0;">Немає записів</li>';
@@ -172,7 +168,6 @@
         workLog.forEach(item => {
             const li = document.createElement('li');
             li.className = 'history-item';
-            
             const itemTotal = parseInt(item.quantity) * parseFloat(item.price);
             
             li.innerHTML = `
@@ -189,6 +184,13 @@
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // Проверка пароля перед добавлением
+        const pass = prompt('Введіть пароль для підтвердження операції:');
+        if (pass !== SECRET_PASSWORD) {
+            alert('Невірний пароль! Доступ заблоковано.');
+            return;
+        }
         
         const jobName = document.getElementById('jobName').value;
         const quantity = document.getElementById('quantity').value;
@@ -207,14 +209,20 @@
     });
 
     clearBtn.addEventListener('click', function() {
-        if (confirm('Очистити всю історію заробітку?')) {
+        // Проверка пароля перед очисткой всей истории
+        const pass = prompt('Введіть пароль для очищення всієї історії:');
+        if (pass !== SECRET_PASSWORD) {
+            alert('Невірний пароль! Очищення скасовано.');
+            return;
+        }
+
+        if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
             workLog = [];
             localStorage.removeItem('salary_work_log_v2');
             updateDashboard();
         }
     });
 
-    // Первоначальный запуск
     updateDashboard();
 </script>
 </body>
