@@ -23,7 +23,7 @@
         .container {
             max-width: 500px;
             margin: 0 auto;
-            display: none; /* Скрыто до ввода пароля */
+            display: none;
         }
         .card {
             background: var(--card-bg);
@@ -39,7 +39,6 @@
         }
         .total-box h3 { margin: 0; font-size: 16px; opacity: 0.9; }
         .total-amount { font-size: 32px; font-weight: bold; margin-top: 5px; }
-        
         h2 { margin-top: 0; font-size: 18px; }
         .form-group { margin-bottom: 15px; }
         label {
@@ -101,8 +100,6 @@
             margin-top: 10px;
             font-weight: normal;
         }
-
-        /* ЭКРАН БЛОКИРОВКИ */
         .lock-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -134,7 +131,6 @@
 </head>
 <body>
 
-<!-- Экран ввода пароля -->
 <div id="lockScreen" class="lock-screen">
     <div class="lock-card">
         <h2>ХУЛИ ПАЛИШЬ?</h2>
@@ -144,7 +140,6 @@
     </div>
 </div>
 
-<!-- Основной интерфейс приложения -->
 <div class="container" id="mainContainer">
     <div class="card total-box">
         <h3>Зароблено всього:</h3>
@@ -158,19 +153,16 @@
                 <label for="jobName">Назва роботи</label>
                 <input type="text" id="jobName" placeholder="Наприклад: Обробка деталей" required>
             </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label for="quantity">Кількість (шт)</label>
                     <input type="number" id="quantity" min="1" placeholder="0" required inputmode="numeric">
                 </div>
-
                 <div class="form-group">
                     <label for="price">Ціна за 1 шт (грн)</label>
                     <input type="number" id="price" step="0.01" placeholder="0.00" required inputmode="decimal">
                 </div>
             </div>
-
             <button type="submit">Додати в баланс</button>
         </form>
     </div>
@@ -185,7 +177,6 @@
 </div>
 
 <script>
-    // Твой личный пароль прописан здесь
     const SECRET_PASSWORD = '19122019'; 
 
     const form = document.getElementById('salaryForm');
@@ -201,12 +192,9 @@
 
     let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
 
-    // Проверка при запуске
     function checkAuth() {
         const authTime = localStorage.getItem('salary_auth_time');
         const now = new Date().getTime();
-
-        // 30 минут активной сессии
         if (authTime && (now - authTime < 1800000)) {
             unlockApp();
         } else {
@@ -253,18 +241,15 @@
     function updateDashboard() {
         const total = workLog.reduce((sum, item) => sum + (parseInt(item.quantity) * parseFloat(item.price)), 0);
         totalSalaryContainer.innerText = `${total.toFixed(2)} грн`;
-
         historyContainer.innerHTML = '';
         if (workLog.length === 0) {
             historyContainer.innerHTML = '<li style="color:#888; text-align:center; padding: 10px 0;">Немає записів</li>';
             return;
         }
-
         workLog.forEach(item => {
             const li = document.createElement('li');
             li.className = 'history-item';
             const itemTotal = parseInt(item.quantity) * parseFloat(item.price);
-            
             li.innerHTML = `
                 <div>
                     <strong>${item.jobName}</strong>
@@ -282,22 +267,24 @@
         const jobName = document.getElementById('jobName').value;
         const quantity = document.getElementById('quantity').value;
         const price = document.getElementById('price').value;
-        
         const now = new Date();
         const dateStr = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
         const newRecord = { jobName, quantity, price, date: dateStr };
-        
         workLog.unshift(newRecord);
         localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog));
-        
         updateDashboard();
         form.reset();
     });
-clearBtn.addEventListener('click', function() {
-if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
-workLog = [];
-localStorage.removeItem('salary_work_log_v2');
-updateDashboard();
-}
-});
-checkAuth();
+
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
+            workLog = [];
+            localStorage.removeItem('salary_work_log_v2');
+            updateDashboard();
+        }
+    });
+
+    checkAuth();
+</script>
+</body>
+</html>
