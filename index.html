@@ -23,6 +23,7 @@
         .container {
             max-width: 500px;
             margin: 0 auto;
+            display: none; /* Скрываем весь интерфейс до авторизации */
         }
         .card {
             background: var(--card-bg);
@@ -100,11 +101,51 @@
             margin-top: 10px;
             font-weight: normal;
         }
+
+        /* ЭКРАН БЛОКИРОВКИ */
+        .lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .lock-card {
+            width: 90%;
+            max-width: 360px;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .lock-card h2 { margin-bottom: 20px; font-size: 22px; color: #222; }
+        .lock-card input {
+            text-align: center;
+            letter-spacing: 4px;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .lock-card button { background-color: var(--primary); margin-top: 0; }
+        .error-msg { color: #ff3b30; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- Экран ввода пароля -->
+<div id="lockScreen" class="lock-screen">
+    <div class="lock-card">
+        <h2>Доступ обмежено</h2>
+        <input type="password" id="passwordInput" placeholder="••••" inputmode="numeric">
+        <button id="loginBtn">Увійти</button>
+        <div id="errorMsg" class="error-msg">Невірний пароль!</div>
+    </div>
+</div>
+
+<!-- Основной интерфейс приложения -->
+<div class="container" id="mainContainer">
     <div class="card total-box">
         <h3>Зароблено всього:</h3>
         <div class="total-amount" id="totalSalary">0.00 грн</div>
@@ -115,7 +156,7 @@
         <form id="salaryForm">
             <div class="form-group">
                 <label for="jobName">Назва роботи</label>
-                <input type="text" id="jobName" placeholder="Наприклад: Обробка деталей, Упаковка" required>
+                <input type="text" id="jobName" placeholder="Наприклад: Обробка деталей" required>
             </div>
 
             <div class="form-row">
@@ -145,15 +186,60 @@
 
 <script>
     // === ТВОЙ ПАРОЛЬ ТУТ ===
-    // Замени '1234' на любой свой секретный пароль (оставь в кавычках)
     const SECRET_PASSWORD = '19122019'; 
 
     const form = document.getElementById('salaryForm');
     const historyContainer = document.getElementById('history');
     const totalSalaryContainer = document.getElementById('totalSalary');
     const clearBtn = document.getElementById('clearAll');
+    
+    const lockScreen = document.getElementById('lockScreen');
+    const mainContainer = document.getElementById('mainContainer');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMsg');
 
     let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
+
+    // Проверка авторизации при старте
+    function checkAuth() {
+        const authTime = localStorage.getItem('salary_auth_time');
+        const now = new Date().getTime();
+
+        // Если с момента последнего ввода прошло меньше 30 минут (1800000 мс)
+        if (authTime && (now - authTime < 1800000)) {
+            unlockApp();
+        } else {
+            lockApp();
+        }
+    }
+
+    function lockApp() {
+        lockScreen.style.display = 'flex';
+        mainContainer.style.display = 'none';
+        passwordInput.value = '';
+        errorMsg.style.display = 'none';
+    }
+
+    function unlockApp() {
+        lockScreen.style.display = 'none';
+        mainContainer.style.display = 'block';
+        localStorage.setItem('salary_auth_time', new Date().getTime());
+        updateDashboard();
+    }
+
+    // Обработка кнопки "Увійти"
+    function handleLogin() {
+        if (passwordInput.value === SECRET_PASSWORD) {
+            unlockApp();
+        } else {
+            errorMsg.style.display = 'block';
+            passwordInput.value = '';
+        }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
 
     function updateDashboard() {
         const total = workLog.reduce((sum, item) => sum + (parseInt(item.quantity) * parseFloat(item.price)), 0);
@@ -185,13 +271,6 @@
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Проверка пароля перед добавлением
-        const pass = prompt('Введіть пароль для підтвердження операції:');
-        if (pass !== SECRET_PASSWORD) {
-            alert('Невірний пароль! Доступ заблоковано.');
-            return;
-        }
-        
         const jobName = document.getElementById('jobName').value;
         const quantity = document.getElementById('quantity').value;
         const price = document.getElementById('price').value;
@@ -209,21 +288,3 @@
     });
 
     clearBtn.addEventListener('click', function() {
-        // Проверка пароля перед очисткой всей истории
-        const pass = prompt('Введіть пароль для очищення всієї історії:');
-        if (pass !== SECRET_PASSWORD) {
-            alert('Невірний пароль! Очищення скасовано.');
-            return;
-        }
-
-        if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
-            workLog = [];
-            localStorage.removeItem('salary_work_log_v2');
-            updateDashboard();
-        }
-    });
-
-    updateDashboard();
-</script>
-</body>
-</html>
