@@ -53,7 +53,15 @@
             border: 1px solid #ccc;
             border-radius: 8px;
             box-sizing: border-box;
-            font-size: 16px; /* Защита от зума на мобилках */
+            font-size: 16px; /* Защита от автозума */
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
         }
         button {
             width: 100%;
@@ -65,6 +73,7 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
+            margin-top: 15px;
         }
         button:active { opacity: 0.9; }
         .history-list { list-style: none; padding: 0; margin: 0; }
@@ -76,8 +85,9 @@
             border-bottom: 1px solid #eee;
         }
         .history-item:last-child { border-bottom: none; }
-        .amount-tag { font-weight: bold; color: #222; }
-        .date { color: #888; font-size: 12px; margin-top: 2px; }
+        .amount-tag { font-weight: bold; color: #222; text-align: right; }
+        .details { color: #666; font-size: 13px; margin-top: 2px; }
+        .date { color: #999; font-size: 11px; margin-top: 2px; }
         .clear-btn {
             background: none;
             color: #ff3b30;
@@ -105,15 +115,24 @@
     <div class="card">
         <h2>Додати виконану роботу</h2>
         <form id="salaryForm">
+            <!-- 1 поле: Название работы -->
             <div class="form-group">
-                <label for="amount">Заробіток за операцію / зміну (грн)</label>
-                <!-- Ручной ввод суммы -->
-                <input type="number" id="amount" step="0.01" placeholder="0.00" required inputmode="decimal">
+                <label for="jobName">Назва роботи</label>
+                <input type="text" id="jobName" placeholder="Наприклад: Обробка деталей, Упаковка" required>
             </div>
 
-            <div class="form-group">
-                <label for="jobName">Що зроблено (коментар)</label>
-                <input type="text" id="jobName" placeholder="Наприклад: Виробіток за 11.10, ремонт ПК">
+            <div class="form-row">
+                <!-- 2 поле: Количество штук -->
+                <div class="form-group">
+                    <label for="quantity">Кількість (шт)</label>
+                    <input type="number" id="quantity" min="1" placeholder="0" required inputmode="numeric">
+                </div>
+
+                <!-- 3 field: Цена за 1 шт -->
+                <div class="form-group">
+                    <label for="price">Ціна за 1 шт (грн)</label>
+                    <input type="number" id="price" step="0.01" placeholder="0.00" required inputmode="decimal">
+                </div>
             </div>
 
             <button type="submit">Додати в баланс</button>
@@ -136,12 +155,11 @@
     const totalSalaryContainer = document.getElementById('totalSalary');
     const clearBtn = document.getElementById('clearAll');
 
-    // Храним данные в локальной памяти браузера
-    let workLog = JSON.parse(localStorage.getItem('salary_work_log')) || [];
+    let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
 
     function updateDashboard() {
-        // Считаем общую сумму ЗП
-        const total = workLog.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+        // Считаем общую сумму ЗП (количество * цену каждой записи)
+        const total = workLog.reduce((sum, item) => sum + (parseInt(item.quantity) * parseFloat(item.price)), 0);
         totalSalaryContainer.innerText = `${total.toFixed(2)} грн`;
 
         // Рендерим историю
@@ -154,12 +172,16 @@
         workLog.forEach(item => {
             const li = document.createElement('li');
             li.className = 'history-item';
+            
+            const itemTotal = parseInt(item.quantity) * parseFloat(item.price);
+            
             li.innerHTML = `
                 <div>
-                    <strong>${item.jobName || 'Виконана робота'}</strong>
+                    <strong>${item.jobName}</strong>
+                    <div class="details">${item.quantity} шт × ${parseFloat(item.price).toFixed(2)} грн</div>
                     <div class="date">${item.date}</div>
                 </div>
-                <div class="amount-tag">+${parseFloat(item.amount).toFixed(2)} грн</div>
+                <div class="amount-tag">+${itemTotal.toFixed(2)} грн</div>
             `;
             historyContainer.appendChild(li);
         });
@@ -168,16 +190,17 @@
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const amount = document.getElementById('amount').value;
         const jobName = document.getElementById('jobName').value;
+        const quantity = document.getElementById('quantity').value;
+        const price = document.getElementById('price').value;
         
         const now = new Date();
         const dateStr = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
 
-        const newRecord = { amount, jobName, date: dateStr };
+        const newRecord = { jobName, quantity, price, date: dateStr };
         
-        workLog.unshift(newRecord); // Самые свежие записи сверху
-        localStorage.setItem('salary_work_log', JSON.stringify(workLog));
+        workLog.unshift(newRecord);
+        localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog));
         
         updateDashboard();
         form.reset();
@@ -186,7 +209,7 @@
     clearBtn.addEventListener('click', function() {
         if (confirm('Очистити всю історію заробітку?')) {
             workLog = [];
-            localStorage.removeItem('salary_work_log');
+            localStorage.removeItem('salary_work_log_v2');
             updateDashboard();
         }
     });
