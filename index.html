@@ -185,7 +185,7 @@
 </div>
 
 <script>
-    // === ТВОЙ ПАРОЛЬ ТУТ ===
+    // Твой новый пароль сохранен здесь
     const SECRET_PASSWORD = '19122019'; 
 
     const form = document.getElementById('salaryForm');
@@ -201,12 +201,11 @@
 
     let workLog = JSON.parse(localStorage.getItem('salary_work_log_v2')) || [];
 
-    // Проверка при запуске
     function checkAuth() {
         const authTime = localStorage.getItem('salary_auth_time');
         const now = new Date().getTime();
 
-        // 30 минут активной сессии
+        // 30 минут сессии
         if (authTime && (now - authTime < 1800000)) {
             unlockApp();
         } else {
@@ -215,22 +214,21 @@
     }
 
     function lockApp() {
-        lockScreen.style.setProperty('display', 'flex', 'important');
+        lockScreen.style.display = 'flex';
         mainContainer.style.display = 'none';
         passwordInput.value = '';
         errorMsg.style.display = 'none';
     }
 
     function unlockApp() {
-        lockScreen.style.setProperty('display', 'none', 'important');
+        lockScreen.style.display = 'none';
         mainContainer.style.display = 'block';
         localStorage.setItem('salary_auth_time', new Date().getTime());
         updateDashboard();
     }
 
     function handleLogin() {
-        const enteredPass = passwordInput.value.trim();
-        if (enteredPass === SECRET_PASSWORD) {
+        if (passwordInput.value.trim() === SECRET_PASSWORD) {
             unlockApp();
         } else {
             errorMsg.style.display = 'block';
@@ -280,26 +278,19 @@
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
         const jobName = document.getElementById('jobName').value;
         const quantity = document.getElementById('quantity').value;
         const price = document.getElementById('price').value;
         
         const now = new Date();
         const dateStr = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
-
         const newRecord = { jobName, quantity, price, date: dateStr };
         
         workLog.unshift(newRecord);
         localStorage.setItem('salary_work_log_v2', JSON.stringify(workLog));
-updateDashboard();
-form.reset();
-});
-clearBtn.addEventListener('click', function() {
-if (confirm('Ви впевнені, що хочете видалити всі записи?')) {
-workLog = [];
-localStorage.removeItem('salary_work_log_v2');
-updateDashboard();
-}
-});
-checkAuth();
+        
+        updateDashboard();
+        form.reset();
+    });
+
+    clearBtn.addEventListener('click', function() {
