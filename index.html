@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Розрахунок ЗП</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --primary: #007aff;
+            --accent: #34c759;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+        .total-box {
+            background: linear-gradient(135deg, #007aff, #0056b3);
+            color: white;
+            text-align: center;
+        }
+        .total-box h3 { margin: 0; font-size: 16px; opacity: 0.9; }
+        .total-amount { font-size: 32px; font-weight: bold; margin-top: 5px; }
+        
+        h2 { margin-top: 0; font-size: 18px; }
+        .form-group { margin-bottom: 15px; }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px; /* Защита от зума на мобилках */
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:active { opacity: 0.9; }
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .history-item:last-child { border-bottom: none; }
+        .amount-tag { font-weight: bold; color: #222; }
+        .date { color: #888; font-size: 12px; margin-top: 2px; }
+        .clear-btn {
+            background: none;
+            color: #ff3b30;
+            border: none;
+            padding: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            width: auto;
+            text-align: right;
+            margin-top: 10px;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Общий баланс заработка -->
+    <div class="card total-box">
+        <h3>Зароблено всього:</h3>
+        <div class="total-amount" id="totalSalary">0.00 грн</div>
+    </div>
+
+    <!-- Форма выработки -->
+    <div class="card">
+        <h2>Додати виконану роботу</h2>
+        <form id="salaryForm">
+            <div class="form-group">
+                <label for="amount">Заробіток за операцію / зміну (грн)</label>
+                <!-- Ручной ввод суммы -->
+                <input type="number" id="amount" step="0.01" placeholder="0.00" required inputmode="decimal">
+            </div>
+
+            <div class="form-group">
+                <label for="jobName">Що зроблено (коментар)</label>
+                <input type="text" id="jobName" placeholder="Наприклад: Виробіток за 11.10, ремонт ПК">
+            </div>
+
+            <button type="submit">Додати в баланс</button>
+        </form>
+    </div>
+
+    <!-- Список выработки -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Історія виробітку</h2>
+            <button id="clearAll" class="clear-btn">Очистити все</button>
+        </div>
+        <ul id="history" class="history-list"></ul>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('salaryForm');
+    const historyContainer = document.getElementById('history');
+    const totalSalaryContainer = document.getElementById('totalSalary');
+    const clearBtn = document.getElementById('clearAll');
+
+    // Храним данные в локальной памяти браузера
+    let workLog = JSON.parse(localStorage.getItem('salary_work_log')) || [];
+
+    function updateDashboard() {
+        // Считаем общую сумму ЗП
+        const total = workLog.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+        totalSalaryContainer.innerText = `${total.toFixed(2)} грн`;
+
+        // Рендерим историю
+        historyContainer.innerHTML = '';
+        if (workLog.length === 0) {
+            historyContainer.innerHTML = '<li style="color:#888; text-align:center; padding: 10px 0;">Немає записів</li>';
+            return;
+        }
+
+        workLog.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `
+                <div>
+                    <strong>${item.jobName || 'Виконана робота'}</strong>
+                    <div class="date">${item.date}</div>
+                </div>
+                <div class="amount-tag">+${parseFloat(item.amount).toFixed(2)} грн</div>
+            `;
+            historyContainer.appendChild(li);
+        });
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const amount = document.getElementById('amount').value;
+        const jobName = document.getElementById('jobName').value;
+        
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'});
+
+        const newRecord = { amount, jobName, date: dateStr };
+        
+        workLog.unshift(newRecord); // Самые свежие записи сверху
+        localStorage.setItem('salary_work_log', JSON.stringify(workLog));
+        
+        updateDashboard();
+        form.reset();
+    });
+
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Очистити всю історію заробітку?')) {
+            workLog = [];
+            localStorage.removeItem('salary_work_log');
+            updateDashboard();
+        }
+    });
+
+    // Первоначальный запуск
+    updateDashboard();
+</script>
+</body>
+</html>
